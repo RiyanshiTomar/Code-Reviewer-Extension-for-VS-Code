@@ -1,0 +1,192 @@
+{
+  "name": "code-review-extension",
+  "displayName": "Code Review Extension",
+  "description": "AI-powered code review extension using Mistral API",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/code-review-extension.git"
+  },
+
+  "engines": {
+    "vscode": "^1.74.0",
+    "node": ">=16.0.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:code-review-extension.reviewCurrentFile",
+    "onCommand:code-review-extension.reviewProject",
+    "onCommand:code-review-extension.reviewAndFix",
+    "onCommand:code-review-extension.addFeature",
+    "onCommand:code-review-extension.quickFixSelection",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:go",
+    "onLanguage:c",
+    "onLanguage:cpp",
+    "onLanguage:cs"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "code-review-extension.reviewCurrentFile",
+        "title": "Review Current File"
+      },
+      {
+        "command": "code-review-extension.reviewProject",
+        "title": "Review Entire Project"
+      },
+      {
+        "command": "code-review-extension.configureAPIKey",
+        "title": "Configure Mistral API Key"
+      },
+      {
+        "command": "code-review-extension.showQualityReport",
+        "title": "Show Code Quality Report"
+      },
+      {
+        "command": "code-review-extension.configureFallbackAPIKey",
+        "title": "Configure Fallback API Key (Development Only)"
+      },
+      {
+        "command": "code-review-extension.openReviewPanel",
+        "title": "Open Code Review Panel"
+      },
+      {
+        "command": "code-review-extension.reviewAndFix",
+        "title": "Review & Fix Code (Apply Suggestions)"
+      },
+      {
+        "command": "code-review-extension.addFeature",
+        "title": "Add Feature to Code"
+      },
+      {
+        "command": "code-review-extension.quickFixSelection",
+        "title": "Quick Fix Selected Code"
+      }
+    ],
+    "configuration": {
+      "title": "Code Review Extension",
+      "properties": {
+        "code-review-extension.apiKey": {
+          "type": "string",
+          "description": "Mistral API Key for code review",
+          "default": ""
+        },
+        "code-review-extension.model": {
+          "type": "string",
+          "description": "Mistral model to use for code review",
+          "default": "mistral-large-latest",
+          "enum": [
+            "mistral-tiny",
+            "mistral-small",
+            "mistral-medium",
+            "mistral-large-latest"
+          ]
+        },
+        "code-review-extension.enableRealTimeReview": {
+          "type": "boolean",
+          "description": "Enable real-time code review as you type",
+          "default": false
+        },
+        "code-review-extension.fileExtensions": {
+          "type": "array",
+          "description": "File extensions to include in code review",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx",
+            ".html",
+            ".css",
+            ".json",
+            ".md",
+            ".py",
+            ".java",
+            ".cpp",
+            ".c",
+            ".cs",
+            ".go",
+            ".rs",
+            ".yaml",
+            ".yml"
+          ]
+        },
+        "code-review-extension.reviewDelay": {
+          "type": "number",
+          "description": "Delay in milliseconds before triggering real-time review after typing stops",
+          "default": 2000,
+          "minimum": 500,
+          "maximum": 10000
+        },
+        "code-review-extension.maxFileSize": {
+          "type": "number",
+          "description": "Maximum file size in bytes to process for review",
+          "default": 51200,
+          "minimum": 1024,
+          "maximum": 1048576
+        },
+        "code-review-extension.reviewOnSave": {
+          "type": "boolean",
+          "description": "Enable code review on file save",
+          "default": true
+        },
+        "code-review-extension.securityFocus": {
+          "type": "boolean",
+          "description": "Focus on security issues during code review",
+          "default": true
+        },
+        "code-review-extension.performanceFocus": {
+          "type": "boolean",
+          "description": "Focus on performance issues during code review",
+          "default": true
+        },
+        "code-review-extension.styleFocus": {
+          "type": "boolean",
+          "description": "Focus on code style issues during code review",
+          "default": true
+        },
+        "code-review-extension.fallbackApiKey": {
+          "type": "string",
+          "description": "Fallback API key to use when user doesn't provide one (for development purposes only)",
+          "default": ""
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node build.js",
+    "compile": "node --loader ts-node/esm src/extension.ts",
+    "watch": "node --watch --loader ts-node/esm src/extension.ts",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "18.x",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "typescript": "^4.9.4",
+    "ts-node": "^10.9.1",
+    "@vscode/test-electron": "^2.2.2"
+  },
+  "dependencies": {
+    "@mistralai/mistralai": "^0.1.0",
+    "dotenv": "^16.3.1",
+    "chokidar": "^3.5.3"
+  }
+}

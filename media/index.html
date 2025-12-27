@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Review Extension</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Code Review Assistant</h1>
+            <div class="toolbar">
+                <button id="refresh-btn" title="Refresh Review">🔄 Refresh</button>
+                <button id="export-btn" title="Export Results">📥 Export</button>
+                <button id="settings-btn" title="Settings">⚙️ Settings</button>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            <div class="progress-text" id="progress-text"></div>
+        </div>
+        
+        <div class="status-bar" id="status-bar">
+            Ready to review code
+        </div>
+        
+        <div id="review-container">
+            <div class="welcome-message">
+                <h3>Welcome to Code Review Extension</h3>
+                <p>Run a code review to see results here</p>
+                <p>Use the commands in VS Code to start a review</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // This script is required for VS Code webview communication
+        const vscode = acquireVsCodeApi();
+    </script>
+    <script src="./main.js"></script>
+</body>
+</html>
