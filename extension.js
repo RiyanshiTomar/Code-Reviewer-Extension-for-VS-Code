@@ -1,8 +1,8 @@
 const vscode = require('vscode');
-const MistralClient = require('@mistralai/mistralai').default;
-const fs = require('fs');
+const MistralClient = require('@mistralai/mistralai').default;  // we are using mistral api key
+const fs = require('fs');   // for system
 const path = require('path');
-const chokidar = require('chokidar');
+const chokidar = require('chokidar');   //ye file changes ko dekhne k liye h 
 const os = require('os');
 
 // Import autofix module
@@ -17,12 +17,12 @@ let currentDocument = null;
 let isRealTimeReviewEnabled = false;
 let reviewPanel = null;
 
-// Define diagnostic severity levels
-const severityMap = {
-    'error': vscode.DiagnosticSeverity.Error,
-    'warning': vscode.DiagnosticSeverity.Warning,
-    'info': vscode.DiagnosticSeverity.Information,
-    'hint': vscode.DiagnosticSeverity.Hint
+// Define diagnostic severity levels 
+const severityMap = { // they are use to represent a problem found in code...
+    'error': vscode.DiagnosticSeverity.Error,  //means more serious....red is-underline
+    'warning': vscode.DiagnosticSeverity.Warning,  //yellow underline
+    'info': vscode.DiagnosticSeverity.Information,    //helpful info
+    'hint': vscode.DiagnosticSeverity.Hint   //suggestions
 };
 
 /**
@@ -47,18 +47,24 @@ function activate(context) {
     }
 
     // Register commands
+    // we will do all these via Command Palette
+      //for review current file
     let disposable = vscode.commands.registerCommand('code-review-extension.reviewCurrentFile', async function () {
         await reviewCurrentFile();
     });
 
+
+   //register command to review entire project
     let projectReviewDisposable = vscode.commands.registerCommand('code-review-extension.reviewProject', async function () {
         await reviewProject();
     });
-
+    
+    // add API Key configuration command
     let configureAPIKeyDisposable = vscode.commands.registerCommand('code-review-extension.configureAPIKey', async function () {
         await configureAPIKey();
     });
-
+    
+     // command to display a quality metrices report for open file
     let showQualityReportDisposable = vscode.commands.registerCommand('code-review-extension.showQualityReport', async function () {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
@@ -68,10 +74,12 @@ function activate(context) {
         }
     });
 
+    //command for backup API key
     let configureFallbackAPIKeyDisposable = vscode.commands.registerCommand('code-review-extension.configureFallbackAPIKey', async function () {
         await configureFallbackAPIKey();
     });
-
+    
+    //open web UI panel
     let openReviewPanelDisposable = vscode.commands.registerCommand('code-review-extension.openReviewPanel', async function () {
         const panel = createReviewWebview(context);
         
@@ -96,7 +104,10 @@ function activate(context) {
     });
 
     // Register autofix commands
+    // runs AI review + autofix
+    // Smart review and fix: shows code changes in green (added) and red (removed) before applying
     let reviewAndFixDisposable = vscode.commands.registerCommand('code-review-extension.reviewAndFix', async function () {
+        // This will now show a diff preview with highlights before applying changes
         await autofix.reviewAndFix();
     });
 
@@ -109,6 +120,8 @@ function activate(context) {
     });
 
     // Register the disposables
+    //save disposables
+    // here we are ensuring cleanup when extensions unloads..
     context.subscriptions.push(disposable);
     context.subscriptions.push(projectReviewDisposable);
     context.subscriptions.push(configureAPIKeyDisposable);
@@ -119,14 +132,16 @@ function activate(context) {
     context.subscriptions.push(addFeatureDisposable);
     context.subscriptions.push(quickFixSelectionDisposable);
 
-    // Initialize diagnostic collection
+    // Initialize diagnostic collection 
+    // creates shared "Problems" collection
     diagnosticCollection = vscode.languages.createDiagnosticCollection('code-review-extension');
     context.subscriptions.push(diagnosticCollection);
     
     // Initialize the AI client if API key is available
-    initializeAIClient();
+    initializeAIClient();  //also create Mistral Client..
     
     // Watch for configuration changes
+    //Re-initilaise AI when API key
     vscode.workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration('code-review-extension.apiKey')) {
             initializeAIClient();

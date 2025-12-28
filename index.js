@@ -194,14 +194,14 @@ export async function runAgent(directoryPath) {
           review: review
         });
         
-        console.log(`✅ Review completed for: ${path.basename(filePath)}`);
+        console.log(`Review completed for: ${path.basename(filePath)}`);
       } else {
-        console.log(`❌ Failed to review: ${filePath}`);
+        console.log(`Failed to review: ${filePath}`);
       }
     }
     
     // Generate summary report
-    console.log('\n📊 CODE REVIEW COMPLETE');
+    console.log('\n CODE REVIEW COMPLETE');
     console.log(`\nTotal Files Analyzed: ${reviewResults.length}`);
     
     // Display individual reviews

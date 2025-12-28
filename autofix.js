@@ -1,6 +1,22 @@
 const vscode = require('vscode');
 const MistralClient = require('@mistralai/mistralai').default;
+const Diff = require('diff');
 require('dotenv').config();
+// Decorations for diff highlighting
+const addedDecorationType = vscode.window.createTextEditorDecorationType({
+    backgroundColor: 'rgba(76, 175, 80, 0.3)', // green
+    isWholeLine: true
+});
+const removedDecorationType = vscode.window.createTextEditorDecorationType({
+    backgroundColor: 'rgba(244, 67, 54, 0.3)', // red
+    isWholeLine: true
+});
+
+// Remove all diff highlights
+function clearDiffDecorations(editor) {
+    editor.setDecorations(addedDecorationType, []);
+    editor.setDecorations(removedDecorationType, []);
+}
 
 // Get API key from configuration or environment
 function getApiKey() {
@@ -590,33 +606,95 @@ function escapeHtml(text) {
  * Main function to review and fix current file
  */
 async function reviewAndFix() {
-    const editor = vscode.window.activeTextEditor;
-    
-    if (!editor) {
-        vscode.window.showErrorMessage('No active file to review.');
-        return;
-    }
-
-    const document = editor.document;
-    const code = document.getText();
-    const language = document.languageId;
-
-    // Show progress
-    await vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        title: 'Analyzing code for fixes...',
-        cancellable: false
-    }, async (progress) => {
-        try {
-            progress.report({ message: 'Sending to AI...' });
-            const fixes = await analyzeAndGetFixes(code, language);
-            
-            progress.report({ message: 'Processing results...' });
-            await showFixesMenu(editor, fixes);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Error: ${error.message}`);
+    try {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage('No active file to review.');
+            return;
         }
-    });
+        const document = editor.document;
+        const code = document.getText();
+        const language = document.languageId;
+
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: 'Analyzing code for fixes...',
+            cancellable: false
+        }, async (progress) => {
+            try {
+                progress.report({ message: 'Sending to AI...' });
+                const fixes = await analyzeAndGetFixes(code, language);
+                progress.report({ message: 'Processing results...' });
+                if (fixes.length === 0) {
+                    vscode.window.showInformationMessage('No issues found! Your code looks good.');
+                    return;
+                }
+                let fixedCode = code;
+                for (const fix of fixes) {
+                    if (fix.originalCode && fix.fixedCode) {
+                        fixedCode = fixedCode.replace(fix.originalCode, fix.fixedCode);
+                    }
+                }
+                // Defensive: check if fixedCode is valid
+                if (typeof fixedCode !== 'string' || fixedCode.length === 0) {
+                    vscode.window.showErrorMessage('Failed to generate fixed code.');
+                    return;
+                }
+                // Compute diff
+                let addedRanges = [], removedRanges = [];
+                try {
+                    const diff = Diff.diffLines(code, fixedCode);
+                    let line = 0;
+                    diff.forEach(part => {
+                        const lines = part.value.split('\n');
+                        if (part.added) {
+                            for (let i = 0; i < lines.length - 1; i++) {
+                                addedRanges.push(new vscode.Range(line, 0, line, lines[i].length));
+                                line++;
+                            }
+                        } else if (part.removed) {
+                            for (let i = 0; i < lines.length - 1; i++) {
+                                removedRanges.push(new vscode.Range(line, 0, line, 0));
+                            }
+                        } else {
+                            line += lines.length - 1;
+                        }
+                    });
+                } catch (diffErr) {
+                    vscode.window.showErrorMessage('Error computing code diff: ' + diffErr.message);
+                }
+                editor.setDecorations(addedDecorationType, addedRanges);
+                editor.setDecorations(removedDecorationType, removedRanges);
+                const accept = await vscode.window.showInformationMessage(
+                    'Review: Green = added, Red = removed. Apply these fixes?',
+                    'Apply', 'Cancel'
+                );
+                if (accept === 'Apply') {
+                    try {
+                        await editor.edit(editBuilder => {
+                            editBuilder.replace(
+                                new vscode.Range(
+                                    document.positionAt(0),
+                                    document.positionAt(code.length)
+                                ),
+                                fixedCode
+                            );
+                        });
+                        clearDiffDecorations(editor);
+                        vscode.window.showInformationMessage('All fixes applied!');
+                    } catch (editErr) {
+                        vscode.window.showErrorMessage('Failed to apply fixes: ' + editErr.message);
+                    }
+                } else {
+                    clearDiffDecorations(editor);
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(`Error: ${error.message}`);
+            }
+        });
+    } catch (outerErr) {
+        vscode.window.showErrorMessage('Unexpected error: ' + outerErr.message);
+    }
 }
 
 /**
