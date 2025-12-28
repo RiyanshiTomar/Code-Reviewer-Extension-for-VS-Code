@@ -40,6 +40,8 @@ vsce package
 ```
 
 ---
+## OR you can directly install my extension from this link:
+https://marketplace.visualstudio.com/items?itemName=RiyanshiTomar.code-review-extension-ai&ssr=false#overview
 
 ## 🔑 Configuration
 
