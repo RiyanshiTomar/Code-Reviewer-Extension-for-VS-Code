@@ -1,6 +1,9 @@
 {
-  "name": "code-review-extension",
-  "displayName": "Code Review Extension",
+  "name": "code-review-extension-ai",
+
+  "displayName": "AI Code Review Extension",
+
+  "publisher": "RiyanshiTomar",
   "description": "AI-powered code review extension using Mistral API",
   "version": "1.0.0",
   "repository": {
